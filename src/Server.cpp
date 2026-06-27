@@ -1,13 +1,15 @@
-#include "../include/Server.hpp"
-
-#include "../include/HttpRequest.hpp"
-#include "../include/HttpResponse.hpp"
-
+#include "Server.hpp"
+#include "HttpRequest.hpp"
+#include "HttpResponse.hpp"
+#include "FileHandler.hpp"
+#include "Router.hpp"
+#include "Logger.hpp"
 
 #include <iostream>
-
 #include <sys/socket.h>
 #include <unistd.h>
+#include <chrono>
+#include <thread>
 
 
 using namespace std;
@@ -26,12 +28,10 @@ Server::Server(int threads)
 void Server::start()
 {
 
-
     socket.bindSocket(8080);
 
 
     socket.listenSocket();
-
 
 
     cout<<"Server started..."<<endl;
@@ -43,29 +43,26 @@ void Server::start()
 
 
         int clientSocket =
-        socket.acceptConnection();
+            socket.acceptConnection();
 
 
 
-        cout<<"New client"<<endl;
-
+     
 
 
         pool.enqueue(
-        
-        [this, clientSocket]()
-        {
 
-            handleClient(clientSocket);
+            [this, clientSocket]()
+            {
 
-        }
+                handleClient(clientSocket);
+
+            }
 
         );
 
 
     }
-
-
 
 }
 
@@ -73,7 +70,8 @@ void Server::start()
 
 void Server::handleClient(int clientSocket)
 {
-
+       
+    Logger::log("Client handled by thread: "+to_string(hash<thread::id>{}(this_thread::get_id())));
 
     char buffer[30000] = {0};
 
@@ -86,7 +84,9 @@ void Server::handleClient(int clientSocket)
         0
     );
 
-
+      this_thread::sleep_for(
+    chrono::seconds(2)
+);
 
     string request(buffer);
 
@@ -99,32 +99,90 @@ void Server::handleClient(int clientSocket)
 
 
 
-    cout<<"Method: "
-        <<httpRequest.method
-        <<endl;
+   Logger::log(
+    "Method: " + httpRequest.method);
+
+
+    Logger::log(
+    "Path: " + httpRequest.path);
 
 
 
-    HttpResponse response;
+    /*
+        File handling layer
+
+        Request:
+
+        GET /index.html
+
+        becomes:
+
+        public/index.html
+    */
+
+
+    Router router;
+
+
+      string filePath =
+    router.resolve(httpRequest.path);
 
 
 
-    string data =
-    response.generate();
+
+    FileHandler fileHandler;
 
 
 
-    send(
-        clientSocket,
-        data.c_str(),
-        data.size(),
-        0
-    );
+    string content =
+fileHandler.readFile(filePath);
+
+
+int statusCode = 200;
+
+
+
+if(content.empty())
+{
+
+content =
+"<html>"
+"<body>"
+"<h1>404 Not Found</h1>"
+"</body>"
+"</html>";
+
+
+statusCode = 404;
+
+}
+
+
+
+
+   
+
+
+
+
+   HttpResponse response;
+
+
+string data =
+    response.generate(content, statusCode);
+
+
+
+send(
+    clientSocket,
+    data.c_str(),
+    data.size(),
+    0
+);
 
 
 
     close(clientSocket);
-
 
 
 }

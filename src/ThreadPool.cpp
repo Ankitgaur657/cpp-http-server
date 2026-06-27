@@ -1,4 +1,4 @@
-#include "../include/ThreadPool.hpp"
+#include "ThreadPool.hpp"
 
 
 ThreadPool::ThreadPool(int threads)

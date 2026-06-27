@@ -9,7 +9,10 @@ class HttpResponse
 
 public:
 
-    string generate();
+    string generate(
+    string body,
+    int statusCode
+);
 
 
 };
