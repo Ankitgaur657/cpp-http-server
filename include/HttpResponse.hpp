@@ -1,21 +1,16 @@
+
 #ifndef HTTPRESPONSE_HPP
 #define HTTPRESPONSE_HPP
+
 #include <string>
-using namespace std;
 
-
-class HttpResponse
-{
-
+class HttpResponse {
 public:
-
-    string generate(
-    string body,
-    int statusCode
-);
-
-
+    std::string generate(
+        const std::string& body,
+        int statusCode,
+        const std::string& contentType = "text/html; charset=utf-8"
+    );
 };
-
 
 #endif

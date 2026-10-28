@@ -1,24 +1,20 @@
+
 #ifndef HTTPREQUEST_HPP
 #define HTTPREQUEST_HPP
+
 #include <string>
-using namespace std;
+#include <unordered_map>
 
-
-class HttpRequest
-{
-
+class HttpRequest {
 public:
+    std::string method;
+    std::string path;
+    std::string version;
+    std::string body;
 
-    string method;
+    std::unordered_map<std::string, std::string> headers;
 
-    string path;
-
-
-    void parse(string request);
-
-
+    bool parse(const std::string& request);
 };
-
-
 
 #endif
